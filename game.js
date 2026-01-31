@@ -1,6 +1,5 @@
 // 3 Down Card Game
 
-// Card value hierarchy for comparison
 const CARD_VALUES = {
     '3': 3,
     '4': 4,
@@ -13,8 +12,8 @@ const CARD_VALUES = {
     'Q': 12,
     'K': 13,
     'A': 14,
-    '2': 15,  // Reset cards - can be played on anything
-    '10': 100, // Outside power structure
+    '2': 15,
+    '10': 100,
     'JOKER': 101
 };
 
@@ -28,17 +27,14 @@ const SUIT_SYMBOLS = {
     'diamonds': '♦'
 };
 
-// Check if suit is black (spades or clubs)
 function isBlackSuit(suit) {
     return suit === 'spades' || suit === 'clubs';
 }
 
-// Check if suit is red (hearts or diamonds)
 function isRedSuit(suit) {
     return suit === 'hearts' || suit === 'diamonds';
 }
 
-// Card class
 class Card {
     constructor(value, suit = null) {
         this.value = value;
@@ -58,48 +54,40 @@ class Card {
         return isRedSuit(this.suit);
     }
 
-    // Check if this is a glass card (red 3s)
     get isGlassCard() {
         return this.value === '3' && this.isRed;
     }
 
-    // Check if this is the thumb card (4 of clubs)
     get isThumbCard() {
         return this.value === '4' && this.suit === 'clubs';
     }
 
-    // Check if this is a reset card (any 2)
     get isResetCard() {
         return this.value === '2';
     }
 
-    // Check if this is a skip card (any 8)
     get isSkipCard() {
         return this.value === '8';
     }
 
-    // Check if this is a reverse card (any Jack)
     get isReverseCard() {
         return this.value === 'J';
     }
 
-    // Check if this is a play-under-7 card (any 7)
     get isSevenCard() {
         return this.value === '7';
     }
 
-    // Check if this is a discard/bomb card (any 10)
     get isTenCard() {
         return this.value === '10';
     }
 
-    // Check if this is the Ace of Spades (can block Joker)
     get isAceOfSpades() {
         return this.value === 'A' && this.suit === 'spades';
     }
 
     get displayValue() {
-        if (this.isJoker) return 'JOKER';
+        if (this.isJoker) return 'JKR';
         return this.value;
     }
 
@@ -113,13 +101,11 @@ class Card {
         return `${this.value}${SUIT_SYMBOLS[this.suit]}`;
     }
 
-    // Check if cards match for playing multiples
     matches(other) {
         return this.value === other.value;
     }
 }
 
-// Deck class
 class Deck {
     constructor() {
         this.cards = [];
@@ -128,13 +114,11 @@ class Deck {
 
     init() {
         this.cards = [];
-        // Add all standard cards
         for (const suit of SUITS) {
             for (const value of VALUES) {
                 this.cards.push(new Card(value, suit));
             }
         }
-        // Add one Joker
         this.cards.push(new Card('JOKER'));
     }
 
@@ -158,7 +142,6 @@ class Deck {
     }
 }
 
-// Player class
 class Player {
     constructor(name, index) {
         this.name = name;
@@ -178,14 +161,12 @@ class Player {
         return this.totalCards === 0;
     }
 
-    // Get cards available to play
     getPlayableCards() {
         if (this.hand.length > 0) {
             return { cards: this.hand, source: 'hand' };
         } else if (this.faceUp.length > 0) {
             return { cards: this.faceUp, source: 'faceUp' };
         } else if (this.faceDown.length > 0) {
-            // Can only flip one face-down card at a time
             return { cards: this.faceDown, source: 'faceDown' };
         }
         return { cards: [], source: null };
@@ -220,7 +201,6 @@ class Player {
     }
 }
 
-// Main Game class
 class Game {
     constructor() {
         this.players = [];
@@ -228,11 +208,12 @@ class Game {
         this.playPile = [];
         this.discardPile = [];
         this.currentPlayerIndex = 0;
-        this.direction = 1; // 1 = clockwise, -1 = counter-clockwise
+        this.viewingPlayerIndex = 0;
+        this.direction = 1;
         this.mustPlayUnder7 = false;
         this.skipCount = 0;
         this.finishOrder = [];
-        this.gamePhase = 'setup'; // setup, swap, play, gameover
+        this.gamePhase = 'setup';
         this.swapPlayerIndex = 0;
         this.selectedSwapHandCard = null;
         this.selectedCards = [];
@@ -240,6 +221,13 @@ class Game {
         this.thumbReactions = {};
         this.jokerPending = false;
         this.jokerTargetIndex = null;
+
+        // Position mapping for opponents based on player count
+        this.positionMaps = {
+            3: ['top', 'left', 'right'],
+            4: ['top', 'left', 'right'],
+            5: ['top', 'top-left', 'top-right', 'left', 'right']
+        };
 
         this.initEventListeners();
     }
@@ -257,11 +245,11 @@ class Game {
             this.finishSwapPhase();
         });
 
-        document.getElementById('play-selected-btn').addEventListener('click', () => {
+        document.getElementById('play-btn').addEventListener('click', () => {
             this.playSelectedCards();
         });
 
-        document.getElementById('pickup-pile-btn').addEventListener('click', () => {
+        document.getElementById('pickup-btn').addEventListener('click', () => {
             this.pickupPile();
         });
 
@@ -301,7 +289,6 @@ class Game {
 
     startGame() {
         try {
-            console.log('Starting game...');
             const playerCount = parseInt(document.getElementById('player-count').value);
             const nameInputs = document.querySelectorAll('.player-name');
 
@@ -310,20 +297,15 @@ class Game {
                 const name = input.value.trim() || `Player ${index + 1}`;
                 this.players.push(new Player(name, index));
             });
-            console.log(`Created ${this.players.length} players`);
 
             this.deck = new Deck();
             this.deck.shuffle();
-            console.log(`Deck created with ${this.deck.count} cards`);
-
             this.dealCards();
-            console.log('Cards dealt');
 
             this.showScreen('swap-screen');
             this.gamePhase = 'swap';
             this.swapPlayerIndex = 0;
             this.showSwapPhase();
-            console.log('Swap phase started');
         } catch (error) {
             console.error('Error starting game:', error);
             alert('Error starting game: ' + error.message);
@@ -331,21 +313,18 @@ class Game {
     }
 
     dealCards() {
-        // Deal 3 face-down cards to each player (one at a time)
         for (let round = 0; round < 3; round++) {
             for (const player of this.players) {
                 player.faceDown.push(this.deck.draw());
             }
         }
 
-        // Deal 3 face-up cards to each player (one at a time)
         for (let round = 0; round < 3; round++) {
             for (const player of this.players) {
                 player.faceUp.push(this.deck.draw());
             }
         }
 
-        // Deal 5 hand cards to each player
         for (let round = 0; round < 5; round++) {
             for (const player of this.players) {
                 player.hand.push(this.deck.draw());
@@ -361,41 +340,32 @@ class Game {
     showSwapPhase() {
         const player = this.players[this.swapPlayerIndex];
         document.getElementById('swap-player-name').textContent = player.name;
-
         this.renderSwapCards();
     }
 
     renderSwapCards() {
         const player = this.players[this.swapPlayerIndex];
 
-        // Render hand cards
         const handContainer = document.getElementById('swap-hand-cards');
         handContainer.innerHTML = '';
         player.hand.forEach((card, index) => {
             const cardEl = this.createCardElement(card);
-            cardEl.dataset.index = index;
-            cardEl.dataset.source = 'hand';
             cardEl.addEventListener('click', () => this.selectSwapCard(cardEl, card, 'hand', index));
             handContainer.appendChild(cardEl);
         });
 
-        // Render face-up cards
         const faceUpContainer = document.getElementById('swap-faceup-cards');
         faceUpContainer.innerHTML = '';
         player.faceUp.forEach((card, index) => {
             const cardEl = this.createCardElement(card);
-            cardEl.dataset.index = index;
-            cardEl.dataset.source = 'faceUp';
             cardEl.addEventListener('click', () => this.selectSwapCard(cardEl, card, 'faceUp', index));
             faceUpContainer.appendChild(cardEl);
         });
 
-        // Render face-down cards (just card backs)
         const faceDownContainer = document.getElementById('swap-facedown-cards');
         faceDownContainer.innerHTML = '';
-        player.faceDown.forEach((card, index) => {
-            const cardEl = document.createElement('div');
-            cardEl.className = 'card card-back';
+        player.faceDown.forEach(() => {
+            const cardEl = this.createCardBack();
             faceDownContainer.appendChild(cardEl);
         });
     }
@@ -404,16 +374,13 @@ class Game {
         const player = this.players[this.swapPlayerIndex];
 
         if (source === 'hand') {
-            // Select hand card for swapping
             document.querySelectorAll('#swap-hand-cards .card').forEach(c => c.classList.remove('selected'));
             cardEl.classList.add('selected');
             this.selectedSwapHandCard = { card, index };
         } else if (source === 'faceUp' && this.selectedSwapHandCard) {
-            // Swap with face-up card
             const handIndex = this.selectedSwapHandCard.index;
             const faceUpIndex = index;
 
-            // Perform swap
             const temp = player.hand[handIndex];
             player.hand[handIndex] = player.faceUp[faceUpIndex];
             player.faceUp[faceUpIndex] = temp;
@@ -428,7 +395,6 @@ class Game {
         this.selectedSwapHandCard = null;
 
         if (this.swapPlayerIndex >= this.players.length) {
-            // All players done swapping
             this.startPlayPhase();
         } else {
             this.showSwapPhase();
@@ -438,22 +404,19 @@ class Game {
     startPlayPhase() {
         this.gamePhase = 'play';
         this.showScreen('game-screen');
-
-        // Find the player with the lowest card to start
         this.currentPlayerIndex = this.findStartingPlayer();
-
+        this.viewingPlayerIndex = this.currentPlayerIndex;
+        this.setupOpponentPositions();
         this.renderGame();
     }
 
     findStartingPlayer() {
-        // Find player with black 3 (lowest), or next lowest card
         let lowestValue = Infinity;
         let startingPlayer = 0;
 
         for (let i = 0; i < this.players.length; i++) {
             const player = this.players[i];
             for (const card of player.hand) {
-                // Black 3s are the lowest
                 if (card.value === '3' && card.isBlack) {
                     if (CARD_VALUES['3'] < lowestValue) {
                         lowestValue = CARD_VALUES['3'];
@@ -463,7 +426,6 @@ class Game {
             }
         }
 
-        // If no black 3 found, find the overall lowest card
         if (lowestValue === Infinity) {
             for (let i = 0; i < this.players.length; i++) {
                 const player = this.players[i];
@@ -480,34 +442,58 @@ class Game {
         return startingPlayer;
     }
 
-    createCardElement(card, faceDown = false) {
+    setupOpponentPositions() {
+        // Hide all opponent positions first
+        ['top', 'left', 'right', 'top-left', 'top-right'].forEach(pos => {
+            const el = document.getElementById(`player-${pos}`);
+            if (el) el.classList.add('hidden');
+        });
+
+        // Show positions based on player count
+        const positions = this.getOpponentPositions();
+        positions.forEach(pos => {
+            const el = document.getElementById(`player-${pos}`);
+            if (el) el.classList.remove('hidden');
+        });
+    }
+
+    getOpponentPositions() {
+        const count = this.players.length;
+        if (count === 3) return ['top', 'left'];
+        if (count === 4) return ['top', 'left', 'right'];
+        if (count === 5) return ['top', 'top-left', 'top-right', 'left'];
+        return ['top', 'left', 'right'];
+    }
+
+    getOpponentPosition(opponentIndex) {
+        const positions = this.getOpponentPositions();
+        return positions[opponentIndex] || 'top';
+    }
+
+    createCardElement(card, small = false) {
         const cardEl = document.createElement('div');
 
-        if (faceDown) {
-            cardEl.className = 'card card-back';
-            return cardEl;
-        }
-
         if (card.isJoker) {
-            cardEl.className = 'card card-front joker';
+            cardEl.className = `card joker${small ? ' small' : ''}`;
             cardEl.innerHTML = `
-                <span class="card-value">JOKER</span>
-                <span class="card-suit">🃏</span>
+                <span class="card-value">${card.displayValue}</span>
+                <span class="card-suit">${card.displaySuit}</span>
             `;
         } else {
             const colorClass = card.isRed ? 'red' : 'black';
-            let specialClass = '';
-            if (card.isGlassCard) specialClass = ' glass-card';
-            if (card.isThumbCard) specialClass = ' thumb-card';
-            if (card.isResetCard) specialClass = ' reset-card';
-
-            cardEl.className = `card card-front ${colorClass}${specialClass}`;
+            cardEl.className = `card ${colorClass}${small ? ' small' : ''}`;
             cardEl.innerHTML = `
                 <span class="card-value">${card.displayValue}</span>
                 <span class="card-suit">${card.displaySuit}</span>
             `;
         }
 
+        return cardEl;
+    }
+
+    createCardBack(small = false, clickable = false) {
+        const cardEl = document.createElement('div');
+        cardEl.className = `card card-back${small ? ' small' : ''}${clickable ? ' clickable' : ''}`;
         return cardEl;
     }
 
@@ -520,94 +506,123 @@ class Game {
     }
 
     renderOpponents() {
-        const container = document.getElementById('opponents-area');
-        container.innerHTML = '';
+        const positions = this.getOpponentPositions();
+        let posIndex = 0;
 
         for (let i = 0; i < this.players.length; i++) {
-            if (i === this.currentPlayerIndex) continue;
+            if (i === this.viewingPlayerIndex) continue;
 
             const player = this.players[i];
-            const opponentDiv = document.createElement('div');
-            opponentDiv.className = 'opponent' + (player.hasFinished ? ' finished' : '');
+            const position = positions[posIndex];
+            const container = document.getElementById(`player-${position}`);
 
-            if (i === this.getNextPlayerIndex()) {
-                opponentDiv.classList.add('active');
+            if (!container) {
+                posIndex++;
+                continue;
             }
 
-            let statusText = '';
-            if (player.hasFinished) {
-                statusText = ` (#${player.finishPosition})`;
-            }
+            container.classList.remove('hidden');
 
-            opponentDiv.innerHTML = `
-                <h4>${player.name}${statusText}</h4>
-                <div class="opponent-cards">
-                    <div>
-                        <div style="display:flex;gap:2px;justify-content:center;">
-                            ${player.faceDown.map(() => '<div class="card card-back"></div>').join('')}
-                        </div>
-                        <div class="mini-card-count">Face-down: ${player.faceDown.length}</div>
-                    </div>
-                </div>
-                <div class="opponent-cards">
-                    <div>
-                        <div style="display:flex;gap:2px;justify-content:center;flex-wrap:wrap;">
-                            ${player.faceUp.map(card => this.createCardElement(card).outerHTML).join('')}
-                        </div>
-                        <div class="mini-card-count">Face-up: ${player.faceUp.length}</div>
-                    </div>
-                </div>
-                <div class="mini-card-count">Hand: ${player.hand.length} cards</div>
-            `;
+            // Name
+            const nameEl = container.querySelector('.opponent-name');
+            nameEl.textContent = player.name + (player.hasFinished ? ` (#${player.finishPosition})` : '');
+            nameEl.className = 'opponent-name';
+            if (i === this.currentPlayerIndex) nameEl.classList.add('active');
+            if (player.hasFinished) nameEl.classList.add('finished');
 
-            container.appendChild(opponentDiv);
+            // Face-down cards
+            const faceDownRow = container.querySelector('.facedown-row');
+            faceDownRow.innerHTML = '';
+            player.faceDown.forEach(() => {
+                faceDownRow.appendChild(this.createCardBack(true));
+            });
+
+            // Face-up cards
+            const faceUpRow = container.querySelector('.faceup-row');
+            faceUpRow.innerHTML = '';
+            player.faceUp.forEach(card => {
+                faceUpRow.appendChild(this.createCardElement(card, true));
+            });
+
+            // Hand cards (as backs)
+            const handEl = container.querySelector('.opponent-hand');
+            handEl.innerHTML = '';
+            player.hand.forEach(() => {
+                handEl.appendChild(this.createCardBack(true));
+            });
+
+            posIndex++;
+        }
+
+        // Hide unused positions
+        for (let p = posIndex; p < positions.length; p++) {
+            const container = document.getElementById(`player-${positions[p]}`);
+            if (container) container.classList.add('hidden');
         }
     }
 
     renderCenterArea() {
-        // Pickup pile
-        document.getElementById('pickup-count').textContent = this.deck.count;
+        // Deck count
+        document.getElementById('deck-count').textContent = this.deck.count;
 
-        // Play pile - show top cards
-        const playPileCards = document.getElementById('play-pile-cards');
-        playPileCards.innerHTML = '';
+        // Draw pile visibility
+        const drawPile = document.getElementById('draw-pile');
+        if (this.deck.isEmpty) {
+            drawPile.classList.add('empty');
+            drawPile.innerHTML = '<span class="pile-count">Empty</span>';
+        } else {
+            drawPile.classList.remove('empty');
+            drawPile.innerHTML = `
+                <div class="card card-back"></div>
+                <span class="pile-count" id="deck-count">${this.deck.count}</span>
+            `;
+        }
 
-        // Show top few cards of play pile
+        // Play pile
+        const playPileEl = document.getElementById('play-pile');
+        playPileEl.innerHTML = '';
+
         const topCards = this.playPile.slice(-4);
         topCards.forEach(card => {
             const cardEl = this.createCardElement(card);
-            playPileCards.appendChild(cardEl);
+            cardEl.style.cursor = 'default';
+            playPileEl.appendChild(cardEl);
         });
 
-        document.getElementById('play-pile-count').textContent = `${this.playPile.length} cards`;
+        document.getElementById('pile-count-label').textContent = `${this.playPile.length} cards`;
 
-        // Discard pile
+        // Discard count
         document.getElementById('discard-count').textContent = this.discardPile.length;
+        const discardPile = document.getElementById('discard-pile');
+        if (this.discardPile.length > 0) {
+            discardPile.classList.remove('empty');
+        } else {
+            discardPile.classList.add('empty');
+        }
     }
 
     renderCurrentPlayer() {
-        const player = this.players[this.currentPlayerIndex];
-        const { cards: playableCards, source } = player.getPlayableCards();
+        const player = this.players[this.viewingPlayerIndex];
+        const { source } = player.getPlayableCards();
+        const isMyTurn = this.viewingPlayerIndex === this.currentPlayerIndex;
 
         // Face-down cards
-        const faceDownContainer = document.getElementById('player-facedown');
+        const faceDownContainer = document.getElementById('my-facedown');
         faceDownContainer.innerHTML = '';
         player.faceDown.forEach((card, index) => {
-            const cardEl = document.createElement('div');
-            cardEl.className = 'card card-back';
-            if (source === 'faceDown') {
-                cardEl.style.cursor = 'pointer';
+            const cardEl = this.createCardBack(false, isMyTurn && source === 'faceDown');
+            if (isMyTurn && source === 'faceDown') {
                 cardEl.addEventListener('click', () => this.selectFaceDownCard(index));
             }
             faceDownContainer.appendChild(cardEl);
         });
 
         // Face-up cards
-        const faceUpContainer = document.getElementById('player-faceup');
+        const faceUpContainer = document.getElementById('my-faceup');
         faceUpContainer.innerHTML = '';
-        player.faceUp.forEach((card, index) => {
+        player.faceUp.forEach((card) => {
             const cardEl = this.createCardElement(card);
-            if (source === 'faceUp') {
+            if (isMyTurn && source === 'faceUp') {
                 cardEl.addEventListener('click', () => this.toggleCardSelection(card, 'faceUp'));
                 if (this.selectedCards.includes(card)) {
                     cardEl.classList.add('selected');
@@ -619,16 +634,16 @@ class Game {
         });
 
         // Hand cards
-        const handContainer = document.getElementById('player-hand');
+        const handContainer = document.getElementById('my-hand');
         handContainer.innerHTML = '';
-        player.hand.forEach((card, index) => {
+        player.hand.forEach((card) => {
             const cardEl = this.createCardElement(card);
-            if (source === 'hand') {
+            if (isMyTurn && source === 'hand') {
                 cardEl.addEventListener('click', () => this.toggleCardSelection(card, 'hand'));
                 if (this.selectedCards.includes(card)) {
                     cardEl.classList.add('selected');
                 }
-            } else {
+            } else if (!isMyTurn) {
                 cardEl.classList.add('disabled');
             }
             handContainer.appendChild(cardEl);
@@ -639,15 +654,12 @@ class Game {
         const index = this.selectedCards.indexOf(card);
 
         if (index === -1) {
-            // Check if this card can be added to selection
             if (this.selectedCards.length === 0) {
                 this.selectedCards.push(card);
             } else {
-                // Must match the value of already selected cards
                 if (card.matches(this.selectedCards[0])) {
                     this.selectedCards.push(card);
                 } else {
-                    // Deselect all and select this one
                     this.selectedCards = [card];
                 }
             }
@@ -665,16 +677,14 @@ class Game {
 
         const card = player.faceDown[index];
         this.selectedCards = [card];
-
-        // Flip and attempt to play
         this.playSelectedCards();
     }
 
     updateGameInfo() {
         const player = this.players[this.currentPlayerIndex];
         document.getElementById('current-player-name').textContent = player.name;
-        document.getElementById('play-direction').textContent =
-            this.direction === 1 ? 'Clockwise ↻' : 'Counter-clockwise ↺';
+        document.getElementById('direction-indicator').textContent =
+            this.direction === 1 ? '↻' : '↺';
 
         let status = '';
         if (this.mustPlayUnder7) {
@@ -684,15 +694,14 @@ class Game {
     }
 
     updateActionButtons() {
-        const playBtn = document.getElementById('play-selected-btn');
+        const playBtn = document.getElementById('play-btn');
         const thumbBtn = document.getElementById('thumb-btn');
         const player = this.players[this.currentPlayerIndex];
+        const isMyTurn = this.viewingPlayerIndex === this.currentPlayerIndex;
 
-        // Enable play button if cards are selected and valid
-        playBtn.disabled = this.selectedCards.length === 0 || !this.isValidPlay(this.selectedCards);
+        playBtn.disabled = !isMyTurn || this.selectedCards.length === 0 || !this.isValidPlay(this.selectedCards);
 
-        // Show thumb button if player has the thumb card
-        if (player.hasThumbCard() && player.hand.length > 0) {
+        if (isMyTurn && player.hasThumbCard() && player.hand.length > 0) {
             thumbBtn.classList.remove('hidden');
         } else {
             thumbBtn.classList.add('hidden');
@@ -705,7 +714,6 @@ class Game {
     }
 
     getEffectiveTopCard() {
-        // Get the effective top card (accounting for glass cards)
         if (this.playPile.length === 0) return null;
 
         let effectiveCard = null;
@@ -722,23 +730,16 @@ class Game {
     isValidPlay(cards) {
         if (cards.length === 0) return false;
 
-        // All cards must have the same value
         const firstValue = cards[0].value;
         if (!cards.every(c => c.value === firstValue)) return false;
 
         const card = cards[0];
         const topCard = this.getEffectiveTopCard();
 
-        // Joker can always be played
         if (card.isJoker) return true;
-
-        // 10s can always be played (outside power structure)
         if (card.isTenCard) return true;
-
-        // 2s (reset cards) can always be played
         if (card.isResetCard) return true;
 
-        // Glass cards (red 3s) can be played on anything except 10 or Joker
         if (card.isGlassCard) {
             if (topCard && (topCard.isTenCard || topCard.isJoker)) {
                 return false;
@@ -746,35 +747,27 @@ class Game {
             return true;
         }
 
-        // If pile is empty, any card can be played
         if (!topCard) return true;
 
-        // If must play under 7
         if (this.mustPlayUnder7) {
             return card.numericValue < CARD_VALUES['7'];
         }
 
-        // Normal play - must be equal or higher value
         return card.numericValue >= topCard.numericValue;
     }
 
     playSelectedCards() {
         if (this.selectedCards.length === 0) return;
-        if (!this.isValidPlay(this.selectedCards)) {
-            this.showMessage('Invalid play!');
-            return;
-        }
 
         const player = this.players[this.currentPlayerIndex];
         const { source } = player.getPlayableCards();
         const cards = [...this.selectedCards];
         const card = cards[0];
 
-        // For face-down cards, check if play is valid after reveal
+        // For face-down cards, check validity after reveal
         if (source === 'faceDown') {
             if (!this.isValidPlay(cards)) {
-                // Must pick up pile plus the revealed card
-                this.showMessage(`${player.name} flipped ${card.toString()} - must pick up the pile!`);
+                this.showMessage(`${player.name} flipped ${card.toString()} - must pick up!`);
                 player.removeCards(cards, source);
                 player.addToHand(cards);
                 player.addToHand(this.playPile);
@@ -786,19 +779,16 @@ class Game {
             }
         }
 
-        // Remove cards from player
+        if (!this.isValidPlay(this.selectedCards)) {
+            this.showMessage('Invalid play!');
+            return;
+        }
+
         player.removeCards(cards, source);
-
-        // Add cards to play pile
         this.playPile.push(...cards);
-
-        // Clear selection
         this.selectedCards = [];
-
-        // Reset must play under 7 flag
         this.mustPlayUnder7 = false;
 
-        // Check for four of a kind (bomb)
         if (this.checkForFourOfAKind()) {
             this.discardPlayPile();
             this.showMessage('Four of a kind! Pile discarded!');
@@ -808,7 +798,6 @@ class Game {
             return;
         }
 
-        // Handle card abilities
         this.handleCardAbility(cards, player);
     }
 
@@ -816,30 +805,27 @@ class Game {
         const card = cards[0];
         const count = cards.length;
 
-        // Joker
         if (card.isJoker) {
             this.handleJoker(player);
             return;
         }
 
-        // 10s - discard pile, player goes again
         if (card.isTenCard) {
             this.discardPlayPile();
-            this.showMessage('10 played! Pile discarded! Play again!');
+            this.showMessage('10 played! Pile discarded!');
             this.drawToMinimum(player);
             this.checkPlayerFinished(player);
             this.renderGame();
             return;
         }
 
-        // 8s - skip players
         if (card.isSkipCard) {
             if (count === 4) {
                 this.discardPlayPile();
                 this.showMessage('Four 8s! Pile discarded!');
             } else {
                 this.skipCount = count;
-                this.showMessage(`${count} 8(s) played! Skipping ${count} player(s)!`);
+                this.showMessage(`Skipping ${count} player(s)!`);
             }
             this.drawToMinimum(player);
             this.checkPlayerFinished(player);
@@ -847,26 +833,22 @@ class Game {
             return;
         }
 
-        // 7s - next player must play under 7
         if (card.isSevenCard) {
             this.mustPlayUnder7 = true;
-            this.showMessage('7 played! Next player must play under 7!');
+            this.showMessage('7 played! Next must play under 7!');
             this.drawToMinimum(player);
             this.checkPlayerFinished(player);
             this.advanceTurn();
             return;
         }
 
-        // Jacks - reverse
         if (card.isReverseCard) {
             if (count === 4) {
                 this.discardPlayPile();
                 this.showMessage('Four Jacks! Pile discarded!');
             } else if (count % 2 === 1) {
                 this.direction *= -1;
-                this.showMessage('Jack played! Direction reversed!');
-            } else {
-                this.showMessage('Two Jacks! Direction stays the same!');
+                this.showMessage('Direction reversed!');
             }
             this.drawToMinimum(player);
             this.checkPlayerFinished(player);
@@ -874,7 +856,6 @@ class Game {
             return;
         }
 
-        // 2s - reset (already on pile, just advance)
         if (card.isResetCard) {
             this.showMessage('2 played! Value reset!');
             this.drawToMinimum(player);
@@ -883,16 +864,14 @@ class Game {
             return;
         }
 
-        // Glass cards - copy the card below
         if (card.isGlassCard) {
-            this.showMessage('Glass card played! Copies the card below.');
+            this.showMessage('Glass card! Copies card below.');
             this.drawToMinimum(player);
             this.checkPlayerFinished(player);
             this.advanceTurn();
             return;
         }
 
-        // Normal cards
         this.drawToMinimum(player);
         this.checkPlayerFinished(player);
         this.advanceTurn();
@@ -907,7 +886,6 @@ class Game {
 
         document.getElementById('joker-target-name').textContent = nextPlayer.name;
 
-        // Check if target has Ace of Spades
         if (nextPlayer.hasAceOfSpades()) {
             document.getElementById('joker-defend-btn').classList.remove('hidden');
         } else {
@@ -922,7 +900,6 @@ class Game {
         const targetPlayer = this.players[this.jokerTargetIndex];
         const jokerPlayer = this.players[this.currentPlayerIndex];
 
-        // Remove Ace of Spades from target player
         let aceCard = targetPlayer.hand.find(c => c.isAceOfSpades);
         let source = 'hand';
         if (!aceCard) {
@@ -933,19 +910,18 @@ class Game {
         targetPlayer.removeCards([aceCard], source);
         this.discardPile.push(aceCard);
 
-        // Joker player picks up pile (excluding the Joker which goes to discard)
         const joker = this.playPile.pop();
         this.discardPile.push(joker);
         jokerPlayer.addToHand(this.playPile);
         this.playPile = [];
 
-        this.showMessage(`${targetPlayer.name} defended with Ace of Spades! ${jokerPlayer.name} picks up the pile!`);
+        this.showMessage(`${targetPlayer.name} defended! ${jokerPlayer.name} picks up!`);
 
         document.getElementById('joker-modal').classList.add('hidden');
         this.jokerPending = false;
 
-        // Target player gets to play on empty pile
         this.currentPlayerIndex = this.jokerTargetIndex;
+        this.viewingPlayerIndex = this.currentPlayerIndex;
         this.jokerTargetIndex = null;
         this.checkPlayerFinished(targetPlayer);
         this.renderGame();
@@ -954,11 +930,9 @@ class Game {
     pickupFromJoker() {
         const targetPlayer = this.players[this.jokerTargetIndex];
 
-        // Move joker to discard
         const joker = this.playPile.pop();
         this.discardPile.push(joker);
 
-        // Target picks up remaining pile
         targetPlayer.addToHand(this.playPile);
         this.playPile = [];
 
@@ -967,7 +941,6 @@ class Game {
         document.getElementById('joker-modal').classList.add('hidden');
         this.jokerPending = false;
 
-        // Next player after target gets to play
         this.currentPlayerIndex = this.jokerTargetIndex;
         this.jokerTargetIndex = null;
         this.advanceTurn();
@@ -977,7 +950,6 @@ class Game {
         const player = this.players[this.currentPlayerIndex];
         if (!player.hasThumbCard()) return;
 
-        // Remove thumb card from hand and discard it
         const thumbCard = player.hand.find(c => c.isThumbCard);
         player.removeCards([thumbCard], 'hand');
         this.discardPile.push(thumbCard);
@@ -985,13 +957,9 @@ class Game {
         this.thumbActive = true;
         this.thumbReactions = {};
 
-        // Show thumb modal to all other players
         document.getElementById('thumb-modal').classList.remove('hidden');
 
-        // Simulate AI reaction (for non-current players)
         setTimeout(() => {
-            // In a real multiplayer game, each player would click
-            // For now, simulate with random delays
             this.players.forEach((p, i) => {
                 if (i !== this.currentPlayerIndex && !p.hasFinished) {
                     const delay = Math.random() * 2000 + 500;
@@ -1006,13 +974,7 @@ class Game {
     }
 
     reactToThumb() {
-        // Current player (viewing) reacts
-        const viewingPlayerIndex = this.currentPlayerIndex;
-
-        // Record reaction
-        this.thumbReactions[viewingPlayerIndex] = Date.now();
-
-        // For demo purposes, end thumb phase after a delay
+        this.thumbReactions[this.viewingPlayerIndex] = Date.now();
         setTimeout(() => {
             this.endThumbPhase();
         }, 2000);
@@ -1024,7 +986,6 @@ class Game {
         document.getElementById('thumb-modal').classList.add('hidden');
         this.thumbActive = false;
 
-        // Find the slowest player (or one who didn't react)
         let slowestIndex = -1;
         let slowestTime = -1;
 
@@ -1033,7 +994,6 @@ class Game {
 
             const reactionTime = this.thumbReactions[i];
             if (reactionTime === undefined) {
-                // Didn't react at all - they're the loser
                 slowestIndex = i;
                 break;
             }
@@ -1047,7 +1007,7 @@ class Game {
             const loser = this.players[slowestIndex];
             loser.addToHand(this.playPile);
             this.playPile = [];
-            this.showMessage(`${loser.name} was slowest and picks up the pile!`);
+            this.showMessage(`${loser.name} was slowest!`);
         }
 
         this.advanceTurn();
@@ -1072,12 +1032,11 @@ class Game {
         this.playPile = [];
         this.mustPlayUnder7 = false;
         this.selectedCards = [];
-        this.showMessage(`${player.name} picks up the pile!`);
+        this.showMessage(`${player.name} picks up!`);
         this.advanceTurn();
     }
 
     drawToMinimum(player) {
-        // Players must have minimum 3 cards in hand while deck has cards
         while (player.hand.length < 3 && !this.deck.isEmpty) {
             player.addToHand(this.deck.draw());
         }
@@ -1088,9 +1047,8 @@ class Game {
             player.hasFinished = true;
             player.finishPosition = this.finishOrder.length + 1;
             this.finishOrder.push(player);
-            this.showMessage(`${player.name} finished in position ${player.finishPosition}!`);
+            this.showMessage(`${player.name} finished #${player.finishPosition}!`);
 
-            // Check if game is over (only one player left)
             const activePlayers = this.players.filter(p => !p.hasFinished);
             if (activePlayers.length <= 1) {
                 if (activePlayers.length === 1) {
@@ -1113,7 +1071,6 @@ class Game {
             if (!this.players[index].hasFinished) {
                 skipsRemaining--;
             }
-            // Safety check to prevent infinite loop
             if (index === this.currentPlayerIndex) break;
         }
 
@@ -1122,23 +1079,24 @@ class Game {
 
     advanceTurn() {
         this.currentPlayerIndex = this.getNextPlayerIndex();
+        this.viewingPlayerIndex = this.currentPlayerIndex;
         this.skipCount = 0;
         this.selectedCards = [];
 
-        // Check if current player has finished
         while (this.players[this.currentPlayerIndex].hasFinished) {
             this.currentPlayerIndex = this.getNextPlayerIndex();
+            this.viewingPlayerIndex = this.currentPlayerIndex;
         }
 
         this.renderGame();
     }
 
     showMessage(text) {
-        const messageArea = document.getElementById('message-area');
-        messageArea.textContent = text;
-        messageArea.classList.add('show');
+        const toast = document.getElementById('message-toast');
+        toast.textContent = text;
+        toast.classList.add('show');
         setTimeout(() => {
-            messageArea.classList.remove('show');
+            toast.classList.remove('show');
         }, 3000);
     }
 
@@ -1161,14 +1119,12 @@ class Game {
     }
 }
 
-// Initialize game when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('3 Down game initializing...');
+    console.log('3 Down initializing...');
     try {
         window.game = new Game();
-        console.log('Game initialized successfully!');
+        console.log('Game ready!');
     } catch (error) {
-        console.error('Error initializing game:', error);
-        alert('Error initializing game: ' + error.message);
+        console.error('Error:', error);
     }
 });
