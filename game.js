@@ -563,19 +563,16 @@ class Game {
 
     renderCenterArea() {
         // Deck count
-        document.getElementById('deck-count').textContent = this.deck.count;
+        document.getElementById('deck-count').textContent = `${this.deck.count} cards`;
 
         // Draw pile visibility
         const drawPile = document.getElementById('draw-pile');
         if (this.deck.isEmpty) {
             drawPile.classList.add('empty');
-            drawPile.innerHTML = '<span class="pile-count">Empty</span>';
+            drawPile.innerHTML = '';
         } else {
             drawPile.classList.remove('empty');
-            drawPile.innerHTML = `
-                <div class="card card-back"></div>
-                <span class="pile-count" id="deck-count">${this.deck.count}</span>
-            `;
+            drawPile.innerHTML = '<div class="card card-back"></div>';
         }
 
         // Play pile
@@ -592,7 +589,7 @@ class Game {
         document.getElementById('pile-count-label').textContent = `${this.playPile.length} cards`;
 
         // Discard count
-        document.getElementById('discard-count').textContent = this.discardPile.length;
+        document.getElementById('discard-count').textContent = `${this.discardPile.length} cards`;
         const discardPile = document.getElementById('discard-pile');
         if (this.discardPile.length > 0) {
             discardPile.classList.remove('empty');
@@ -748,6 +745,9 @@ class Game {
         }
 
         if (!topCard) return true;
+
+        // If top card is a 2 (reset), any card can be played
+        if (topCard.isResetCard) return true;
 
         if (this.mustPlayUnder7) {
             return card.numericValue < CARD_VALUES['7'];

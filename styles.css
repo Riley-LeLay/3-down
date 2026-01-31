@@ -265,10 +265,10 @@ button:disabled {
     background: #2a7a5a;
     position: relative;
     display: grid;
-    grid-template-columns: 180px 1fr 180px;
-    grid-template-rows: 160px 1fr 200px;
-    gap: 10px;
-    padding: 10px;
+    grid-template-columns: 200px 1fr 200px;
+    grid-template-rows: 170px 1fr 210px;
+    gap: 15px;
+    padding: 15px;
     min-height: 0;
 }
 
@@ -312,9 +312,13 @@ button:disabled {
     font-weight: bold;
     font-size: 0.85rem;
     background: rgba(0,0,0,0.3);
-    padding: 3px 10px;
+    padding: 5px 12px;
     border-radius: 10px;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 150px;
 }
 
 .opponent-name.active {
@@ -371,7 +375,8 @@ button:disabled {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
+    min-width: 80px;
 }
 
 .pile-stack {
@@ -390,8 +395,9 @@ button:disabled {
 
 .pile-count {
     color: white;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     text-align: center;
+    white-space: nowrap;
 }
 
 #play-area {
@@ -415,8 +421,10 @@ button:disabled {
 }
 
 .pile-label {
-    color: rgba(255,255,255,0.7);
-    font-size: 0.8rem;
+    color: rgba(255,255,255,0.8);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    margin-top: 5px;
 }
 
 /* Bottom Player */
@@ -470,14 +478,17 @@ button:disabled {
 #action-bar {
     background: #1a5276;
     color: white;
-    padding: 10px 20px;
+    padding: 12px 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 #current-turn {
-    font-size: 0.95rem;
+    font-size: 1rem;
+    white-space: nowrap;
 }
 
 #current-player-name {
@@ -514,6 +525,8 @@ button:disabled {
 #special-status {
     color: #ff6b6b;
     font-weight: bold;
+    font-size: 1rem;
+    white-space: nowrap;
 }
 
 /* Message Toast */
