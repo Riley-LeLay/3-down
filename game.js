@@ -750,7 +750,7 @@ class Game {
         if (topCard.isResetCard) return true;
 
         if (this.mustPlayUnder7) {
-            return card.numericValue < CARD_VALUES['7'];
+            return card.numericValue <= CARD_VALUES['7'];
         }
 
         return card.numericValue >= topCard.numericValue;
@@ -1078,17 +1078,23 @@ class Game {
     }
 
     advanceTurn() {
-        this.currentPlayerIndex = this.getNextPlayerIndex();
-        this.viewingPlayerIndex = this.currentPlayerIndex;
-        this.skipCount = 0;
-        this.selectedCards = [];
+        // Render current state first so player can see the cards played
+        this.renderGame();
 
-        while (this.players[this.currentPlayerIndex].hasFinished) {
+        // Delay before switching to next player
+        setTimeout(() => {
             this.currentPlayerIndex = this.getNextPlayerIndex();
             this.viewingPlayerIndex = this.currentPlayerIndex;
-        }
+            this.skipCount = 0;
+            this.selectedCards = [];
 
-        this.renderGame();
+            while (this.players[this.currentPlayerIndex].hasFinished) {
+                this.currentPlayerIndex = this.getNextPlayerIndex();
+                this.viewingPlayerIndex = this.currentPlayerIndex;
+            }
+
+            this.renderGame();
+        }, 1500);
     }
 
     showMessage(text) {
