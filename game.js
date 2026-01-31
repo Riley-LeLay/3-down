@@ -300,23 +300,34 @@ class Game {
     }
 
     startGame() {
-        const playerCount = parseInt(document.getElementById('player-count').value);
-        const nameInputs = document.querySelectorAll('.player-name');
+        try {
+            console.log('Starting game...');
+            const playerCount = parseInt(document.getElementById('player-count').value);
+            const nameInputs = document.querySelectorAll('.player-name');
 
-        this.players = [];
-        nameInputs.forEach((input, index) => {
-            const name = input.value.trim() || `Player ${index + 1}`;
-            this.players.push(new Player(name, index));
-        });
+            this.players = [];
+            nameInputs.forEach((input, index) => {
+                const name = input.value.trim() || `Player ${index + 1}`;
+                this.players.push(new Player(name, index));
+            });
+            console.log(`Created ${this.players.length} players`);
 
-        this.deck = new Deck();
-        this.deck.shuffle();
-        this.dealCards();
+            this.deck = new Deck();
+            this.deck.shuffle();
+            console.log(`Deck created with ${this.deck.count} cards`);
 
-        this.showScreen('swap-screen');
-        this.gamePhase = 'swap';
-        this.swapPlayerIndex = 0;
-        this.showSwapPhase();
+            this.dealCards();
+            console.log('Cards dealt');
+
+            this.showScreen('swap-screen');
+            this.gamePhase = 'swap';
+            this.swapPlayerIndex = 0;
+            this.showSwapPhase();
+            console.log('Swap phase started');
+        } catch (error) {
+            console.error('Error starting game:', error);
+            alert('Error starting game: ' + error.message);
+        }
     }
 
     dealCards() {
@@ -1152,5 +1163,12 @@ class Game {
 
 // Initialize game when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    window.game = new Game();
+    console.log('3 Down game initializing...');
+    try {
+        window.game = new Game();
+        console.log('Game initialized successfully!');
+    } catch (error) {
+        console.error('Error initializing game:', error);
+        alert('Error initializing game: ' + error.message);
+    }
 });
