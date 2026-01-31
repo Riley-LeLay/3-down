@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3 Down - Card Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Setup Screen -->
+        <div id="setup-screen" class="screen">
+            <h1>3 Down</h1>
+            <div class="setup-form">
+                <label for="player-count">Number of Players (3-5):</label>
+                <select id="player-count">
+                    <option value="3">3 Players</option>
+                    <option value="4">4 Players</option>
+                    <option value="5">5 Players</option>
+                </select>
+                <div id="player-names">
+                    <input type="text" class="player-name" placeholder="Player 1 Name" data-player="0">
+                    <input type="text" class="player-name" placeholder="Player 2 Name" data-player="1">
+                    <input type="text" class="player-name" placeholder="Player 3 Name" data-player="2">
+                </div>
+                <button id="start-game-btn">Start Game</button>
+            </div>
+        </div>
+
+        <!-- Swap Phase Screen -->
+        <div id="swap-screen" class="screen hidden">
+            <h2>Swap Phase - <span id="swap-player-name"></span></h2>
+            <p>Click a hand card then a face-up card to swap them. Click "Done Swapping" when finished.</p>
+            <div id="swap-area">
+                <div class="card-row">
+                    <h3>Your Hand Cards</h3>
+                    <div id="swap-hand-cards" class="card-container"></div>
+                </div>
+                <div class="card-row">
+                    <h3>Your Face-Up Cards</h3>
+                    <div id="swap-faceup-cards" class="card-container"></div>
+                </div>
+                <div class="card-row">
+                    <h3>Your Face-Down Cards (Cannot be swapped)</h3>
+                    <div id="swap-facedown-cards" class="card-container"></div>
+                </div>
+            </div>
+            <button id="done-swap-btn">Done Swapping</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen hidden">
+            <div id="game-info">
+                <div id="current-player-display">Current Turn: <span id="current-player-name"></span></div>
+                <div id="direction-display">Direction: <span id="play-direction">Clockwise</span></div>
+                <div id="special-status"></div>
+            </div>
+
+            <div id="opponents-area"></div>
+
+            <div id="center-area">
+                <div id="pickup-pile" class="pile">
+                    <div class="pile-label">Pickup Pile</div>
+                    <div id="pickup-count">0</div>
+                </div>
+                <div id="play-pile" class="pile">
+                    <div class="pile-label">Play Pile</div>
+                    <div id="play-pile-cards"></div>
+                    <div id="play-pile-count">0 cards</div>
+                </div>
+                <div id="discard-pile" class="pile">
+                    <div class="pile-label">Discard</div>
+                    <div id="discard-count">0</div>
+                </div>
+            </div>
+
+            <div id="current-player-area">
+                <div class="card-row">
+                    <h3>Face-Down Cards</h3>
+                    <div id="player-facedown" class="card-container"></div>
+                </div>
+                <div class="card-row">
+                    <h3>Face-Up Cards</h3>
+                    <div id="player-faceup" class="card-container"></div>
+                </div>
+                <div class="card-row">
+                    <h3>Hand Cards</h3>
+                    <div id="player-hand" class="card-container"></div>
+                </div>
+            </div>
+
+            <div id="action-buttons">
+                <button id="play-selected-btn" disabled>Play Selected</button>
+                <button id="pickup-pile-btn">Pick Up Pile</button>
+                <button id="thumb-btn" class="hidden">Use Thumb (4♣)</button>
+            </div>
+
+            <div id="message-area"></div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+            <h1>Game Over!</h1>
+            <div id="rankings"></div>
+            <button id="play-again-btn">Play Again</button>
+        </div>
+
+        <!-- Thumb Reaction Modal -->
+        <div id="thumb-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>THUMB!</h2>
+                <p>Quick! Click the button!</p>
+                <button id="thumb-react-btn">👍 THUMB!</button>
+            </div>
+        </div>
+
+        <!-- Joker Defense Modal -->
+        <div id="joker-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>JOKER PLAYED!</h2>
+                <p id="joker-target-name"></p> must defend with Ace of Spades or pick up the pile!
+                <div id="joker-actions">
+                    <button id="joker-defend-btn" class="hidden">Play Ace of Spades</button>
+                    <button id="joker-pickup-btn">Pick Up Pile</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
